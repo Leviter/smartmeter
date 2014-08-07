@@ -1,0 +1,12 @@
+package org.theblackproject.smartmeter.datagram.values;
+
+
+import lombok.Getter;
+
+public abstract class Value<T> {
+
+	@Getter
+	protected T value;
+
+	public abstract void setValue(T value);
+}
