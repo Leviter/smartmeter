@@ -1,9 +1,14 @@
 package org.theblackproject.smartmeter.datagram;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.theblackproject.smartmeter.datagram.values.DoubleValue;
 import org.theblackproject.smartmeter.datagram.values.StringValue;
 import org.theblackproject.smartmeter.datagram.values.Value;
+import org.theblackproject.smartmeter.model.Datagram;
+import org.theblackproject.smartmeter.model.Electricity;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,41 +21,58 @@ public class DatagramDecoder {
 
 	private static final String REGEX_ID = "/(.*)";
 	private static final String REGEX_ELECTRICITY_METER_ID = "0-0:96.1.1\\((.*)\\)";
+	private static final String REGEX_ELECTRICITY_USAGE_LOW_TOTAL = "1-0:1.8.1\\((.*)\\*kWh\\)";
 
-	private static Map<Pattern, Class<? extends Value>> patterns = new HashMap<>();
+	private static Map<Pattern, DatagramValueMapper> patterns = new HashMap<>();
 
 	static {
-		patterns.put(Pattern.compile(REGEX_ID), StringValue.class);
-		patterns.put(Pattern.compile(REGEX_ELECTRICITY_METER_ID), StringValue.class);
+		patterns.put(Pattern.compile(REGEX_ID), new DatagramValueMapper(StringValue.class, "id"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_METER_ID), new DatagramValueMapper(StringValue.class, "electricity.meterId"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_USAGE_LOW_TOTAL), new DatagramValueMapper(DoubleValue.class, "electricity.totalUsageLow"));
 	}
 
-	public void parse(List<String> datagram) {
+	private Datagram datagram;
+	private Electricity electricity;
+
+	public void parse(List<String> datagram, Datagram output) {
 		for (String lineInDatagram : datagram) {
 			for(Map.Entry entry : patterns.entrySet()) {
 				Pattern pattern = (Pattern) entry.getKey();
-				Class clazz = (Class) entry.getValue();
+				DatagramValueMapper valueMapper = (DatagramValueMapper) entry.getValue();
 
 				Matcher matcher = pattern.matcher(lineInDatagram);
 				if (matcher.find()) {
 					log.debug("We have a match! ==> " + matcher.group(1));
 					try {
-						Value value = (Value) clazz.newInstance();
+						Class<? extends Value> valueClass = valueMapper.getValue();
+						String setter = valueMapper.getSetter();
+
+						Value value = valueClass.newInstance();
 						value.setValue(matcher.group(1));
 
 						log.debug("Created an object and this is it... " + value);
 						log.debug("Its value is... " + value.getValue());
+
+						try {
+							PropertyUtils.setNestedProperty(output, setter, value.getValue());
+						} catch (InvocationTargetException | NoSuchMethodException e) {
+							e.printStackTrace();
+						}
+
 					} catch (InstantiationException | IllegalAccessException e) {
 						e.printStackTrace();
 					}
 				}
 			}
 		}
+
+		log.debug("Datagram = " + output);
 	}
 
 	public static void main(String[] args) {
 		final String message = "/KMP5 ZABF001587315111KMP\n" +
 				"0-0:96.1.1(205C4D246333034353537383234323121)\n" +
-				"1-0:1.8.1(00185.000*kWh)\\n" +
+				"1-0:1.8.1(00185.000*kWh)\n" +
 				"1-0:1.8.2(00084.000*kWh)\n" +
 				"1-0:2.8.1(00013.000*kWh)\n" +
 				"1-0:2.8.2(00019.000*kWh)\n" +
@@ -69,6 +91,7 @@ public class DatagramDecoder {
 				"!\n";
 
 		DatagramDecoder decoder = new DatagramDecoder();
-		decoder.parse(Arrays.asList(message.split("\n")));
+		Datagram datagram = new Datagram();
+		decoder.parse(Arrays.asList(message.split("\n")), datagram);
 	}
 }

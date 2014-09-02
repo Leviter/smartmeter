@@ -8,5 +8,5 @@ public abstract class Value<T> {
 	@Getter
 	protected T value;
 
-	public abstract void setValue(T value);
+	public abstract void setValue(String value);
 }
