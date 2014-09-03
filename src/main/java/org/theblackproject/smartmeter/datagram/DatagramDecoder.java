@@ -2,11 +2,12 @@ package org.theblackproject.smartmeter.datagram;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.theblackproject.smartmeter.datagram.values.DoubleValue;
+import org.theblackproject.smartmeter.datagram.values.ByteValue;
+import org.theblackproject.smartmeter.datagram.values.DoubleUnitValue;
 import org.theblackproject.smartmeter.datagram.values.StringValue;
+import org.theblackproject.smartmeter.datagram.values.UnitValue;
 import org.theblackproject.smartmeter.datagram.values.Value;
 import org.theblackproject.smartmeter.model.Datagram;
-import org.theblackproject.smartmeter.model.Electricity;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -20,19 +21,29 @@ import java.util.regex.Pattern;
 public class DatagramDecoder {
 
 	private static final String REGEX_ID = "/(.*)";
+
 	private static final String REGEX_ELECTRICITY_METER_ID = "0-0:96.1.1\\((.*)\\)";
-	private static final String REGEX_ELECTRICITY_USAGE_LOW_TOTAL = "1-0:1.8.1\\((.*)\\*kWh\\)";
+	private static final String REGEX_ELECTRICITY_USED_LOW_TOTAL = "1-0:1.8.1\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_USED_HIGH_TOTAL = "1-0:1.8.2\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_PRODUCED_LOW_TOTAL = "1-0:2.8.1\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_PRODUCED_HIGH_TOTAL = "1-0:2.8.2\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_CURRENT_USAGE = "1-0:1.7.0\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_CURRENT_PRODUCTION = "1-0:2.7.0\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_TARIFF = "0-0:96.14.0\\((\\d*)\\)";
 
 	private static Map<Pattern, DatagramValueMapper> patterns = new HashMap<>();
 
 	static {
 		patterns.put(Pattern.compile(REGEX_ID), new DatagramValueMapper(StringValue.class, "id"));
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_METER_ID), new DatagramValueMapper(StringValue.class, "electricity.meterId"));
-		patterns.put(Pattern.compile(REGEX_ELECTRICITY_USAGE_LOW_TOTAL), new DatagramValueMapper(DoubleValue.class, "electricity.totalUsageLow"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_USED_LOW_TOTAL), new DatagramValueMapper(DoubleUnitValue.class, "electricity.totalUsedLow"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_USED_HIGH_TOTAL), new DatagramValueMapper(DoubleUnitValue.class, "electricity.totalUsedHigh"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_PRODUCED_LOW_TOTAL), new DatagramValueMapper(DoubleUnitValue.class, "electricity.totalProducedLow"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_PRODUCED_HIGH_TOTAL), new DatagramValueMapper(DoubleUnitValue.class, "electricity.totalProducedHigh"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_CURRENT_USAGE), new DatagramValueMapper(DoubleUnitValue.class, "electricity.currentUsage"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_CURRENT_PRODUCTION), new DatagramValueMapper(DoubleUnitValue.class, "electricity.currentProduction"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_TARIFF), new DatagramValueMapper(ByteValue.class, "electricity.tariff"));
 	}
-
-	private Datagram datagram;
-	private Electricity electricity;
 
 	public void parse(List<String> datagram, Datagram output) {
 		for (String lineInDatagram : datagram) {
@@ -42,7 +53,6 @@ public class DatagramDecoder {
 
 				Matcher matcher = pattern.matcher(lineInDatagram);
 				if (matcher.find()) {
-					log.debug("We have a match! ==> " + matcher.group(1));
 					try {
 						Class<? extends Value> valueClass = valueMapper.getValue();
 						String setter = valueMapper.getSetter();
@@ -50,23 +60,22 @@ public class DatagramDecoder {
 						Value value = valueClass.newInstance();
 						value.setValue(matcher.group(1));
 
-						log.debug("Created an object and this is it... " + value);
-						log.debug("Its value is... " + value.getValue());
+						if (value instanceof UnitValue) {
+							((UnitValue) value).setUnit(matcher.group(2));
+						}
 
 						try {
-							PropertyUtils.setNestedProperty(output, setter, value.getValue());
+							PropertyUtils.setNestedProperty(output, setter, value);
 						} catch (InvocationTargetException | NoSuchMethodException e) {
-							e.printStackTrace();
+							log.error("Could not call method [" + setter + "]");
 						}
 
 					} catch (InstantiationException | IllegalAccessException e) {
-						e.printStackTrace();
+						log.error("Could not create object for class " + valueMapper.getValue());
 					}
 				}
 			}
 		}
-
-		log.debug("Datagram = " + output);
 	}
 
 	public static void main(String[] args) {
@@ -93,5 +102,8 @@ public class DatagramDecoder {
 		DatagramDecoder decoder = new DatagramDecoder();
 		Datagram datagram = new Datagram();
 		decoder.parse(Arrays.asList(message.split("\n")), datagram);
+		log.info("\n=========================================================\n" +
+				datagram +
+				"\n=========================================================");
 	}
 }

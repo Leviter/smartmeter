@@ -1,8 +1,8 @@
 package org.theblackproject.smartmeter.datagram.values;
 
-public class DoubleValue extends Value<Double> {
+public class ByteValue extends Value<Byte> {
 	@Override
 	public void setValue(String value) {
-		this.value = Double.parseDouble(value);
+		this.value = Byte.parseByte(value, 10);
 	}
 }

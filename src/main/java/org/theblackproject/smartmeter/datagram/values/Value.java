@@ -1,6 +1,5 @@
 package org.theblackproject.smartmeter.datagram.values;
 
-
 import lombok.Getter;
 
 public abstract class Value<T> {
@@ -9,4 +8,8 @@ public abstract class Value<T> {
 	protected T value;
 
 	public abstract void setValue(String value);
+
+	public String toString() {
+		return "value=" + value;
+	}
 }
