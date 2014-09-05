@@ -1,7 +1,10 @@
 package org.theblackproject.smartmeter.datagram;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.joda.time.DateTime;
 import org.theblackproject.smartmeter.datagram.values.ByteValue;
 import org.theblackproject.smartmeter.datagram.values.DateTimeValue;
 import org.theblackproject.smartmeter.datagram.values.DoubleUnitValue;
@@ -9,6 +12,7 @@ import org.theblackproject.smartmeter.datagram.values.DoubleValue;
 import org.theblackproject.smartmeter.datagram.values.StringValue;
 import org.theblackproject.smartmeter.datagram.values.UnitValue;
 import org.theblackproject.smartmeter.datagram.values.Value;
+import org.theblackproject.smartmeter.gson.DateTimeTypeConverter;
 import org.theblackproject.smartmeter.model.Datagram;
 
 import java.lang.reflect.InvocationTargetException;
@@ -115,8 +119,17 @@ public class DatagramDecoder {
 		DatagramDecoder decoder = new DatagramDecoder();
 		Datagram datagram = new Datagram();
 		decoder.parse(Arrays.asList(message.split("\n")), datagram);
+
+		Gson gson = new GsonBuilder().
+				registerTypeAdapter(DateTime.class, new DateTimeTypeConverter()).
+				setPrettyPrinting().
+				create();
+		String json = gson.toJson(datagram);
+
 		log.info("\n=========================================================\n" +
-				datagram +
+				new Gson().toJson(json) +
 				"\n=========================================================");
+
+		System.out.println(json);
 	}
 }
