@@ -13,4 +13,5 @@ public class Datagram {
 	private StringValue id;
 
 	private Electricity electricity = new Electricity();
+	private Gas gas = new Gas();
 }
