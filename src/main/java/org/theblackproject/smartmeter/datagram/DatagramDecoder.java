@@ -9,6 +9,8 @@ import org.theblackproject.smartmeter.datagram.values.ByteValue;
 import org.theblackproject.smartmeter.datagram.values.DateTimeValue;
 import org.theblackproject.smartmeter.datagram.values.DoubleUnitValue;
 import org.theblackproject.smartmeter.datagram.values.DoubleValue;
+import org.theblackproject.smartmeter.datagram.values.IntegerUnitValue;
+import org.theblackproject.smartmeter.datagram.values.IntegerValue;
 import org.theblackproject.smartmeter.datagram.values.StringValue;
 import org.theblackproject.smartmeter.datagram.values.UnitValue;
 import org.theblackproject.smartmeter.datagram.values.Value;
@@ -27,6 +29,7 @@ import java.util.regex.Pattern;
 public class DatagramDecoder {
 
 	private static final String REGEX_ID = "/(.*)";
+	private static final String REGEX_NUMBER_OF_DEVICES = "0-1:24.1.0\\((\\d*)\\)";
 
 	private static final String REGEX_ELECTRICITY_METER_ID = "0-0:96.1.1\\((.*)\\)";
 	private static final String REGEX_ELECTRICITY_USED_LOW_TOTAL = "1-0:1.8.1\\((.*)\\*(.*)\\)";
@@ -35,7 +38,11 @@ public class DatagramDecoder {
 	private static final String REGEX_ELECTRICITY_PRODUCED_HIGH_TOTAL = "1-0:2.8.2\\((.*)\\*(.*)\\)";
 	private static final String REGEX_ELECTRICITY_CURRENT_USAGE = "1-0:1.7.0\\((.*)\\*(.*)\\)";
 	private static final String REGEX_ELECTRICITY_CURRENT_PRODUCTION = "1-0:2.7.0\\((.*)\\*(.*)\\)";
-	private static final String REGEX_ELECTRICITY_TARIFF = "0-0:96.14.0\\((\\d)\\)";
+	private static final String REGEX_ELECTRICITY_TARIFF = "0-0:96.14.0\\((\\d*)\\)";
+	private static final String REGEX_ELECTRICITY_MAXIMUM_CURRENT = "0-0:17.0.0\\((.*)\\*(.*)\\)";
+	private static final String REGEX_ELECTRICITY_SWITCH_POSITION = "0-0:96.3.10\\((\\d)\\)";
+	private static final String REGEX_ELECTRICITY_MESSAGE_NUMBER = "0-0:96.13.1\\((\\d*)\\)";
+	private static final String REGEX_ELECTRICITY_MESSAGE_TEXT = "0-0:96.13.0\\((\\.*)\\)";
 
 	private static final String REGEX_GAS_METER_ID = "0-1:96.1.0\\((.*)\\)";
 	private static final String REGEX_GAS_TIMESTAMP = "0-1:24.3.0\\((\\d*)\\)\\(.*\\)";
@@ -46,6 +53,7 @@ public class DatagramDecoder {
 
 	static {
 		patterns.put(Pattern.compile(REGEX_ID), new DatagramValueMapper(StringValue.class, "id"));
+		patterns.put(Pattern.compile(REGEX_NUMBER_OF_DEVICES), new DatagramValueMapper(ByteValue.class, "numberOfDevices"));
 
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_METER_ID), new DatagramValueMapper(StringValue.class, "electricity.meterId"));
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_USED_LOW_TOTAL), new DatagramValueMapper(DoubleUnitValue.class, "electricity.totalUsedLow"));
@@ -55,6 +63,10 @@ public class DatagramDecoder {
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_CURRENT_USAGE), new DatagramValueMapper(DoubleUnitValue.class, "electricity.currentUsage"));
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_CURRENT_PRODUCTION), new DatagramValueMapper(DoubleUnitValue.class, "electricity.currentProduction"));
 		patterns.put(Pattern.compile(REGEX_ELECTRICITY_TARIFF), new DatagramValueMapper(ByteValue.class, "electricity.tariff"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_MAXIMUM_CURRENT), new DatagramValueMapper(IntegerUnitValue.class, "electricity.maximumCurrent"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_SWITCH_POSITION), new DatagramValueMapper(ByteValue.class, "electricity.switchPosition"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_MESSAGE_NUMBER), new DatagramValueMapper(IntegerValue.class, "electricity.messageNumber"));
+		patterns.put(Pattern.compile(REGEX_ELECTRICITY_MESSAGE_TEXT), new DatagramValueMapper(StringValue.class, "electricity.messageText"));
 
 		patterns.put(Pattern.compile(REGEX_GAS_METER_ID), new DatagramValueMapper(StringValue.class, "gas.meterId"));
 		patterns.put(Pattern.compile(REGEX_GAS_TIMESTAMP), new DatagramValueMapper(DateTimeValue.class, "gas.timestamp"));
