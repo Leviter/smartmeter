@@ -32,21 +32,21 @@ public class DatagramDecoder {
 	protected static final String REGEX_NUMBER_OF_DEVICES = "0-1:24.1.0\\((\\d*)\\)";
 
 	protected static final String REGEX_ELECTRICITY_METER_ID = "0-0:96.1.1\\((.*)\\)";
-	protected static final String REGEX_ELECTRICITY_USED_LOW_TOTAL = "1-0:1.8.1\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_USED_HIGH_TOTAL = "1-0:1.8.2\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_PRODUCED_LOW_TOTAL = "1-0:2.8.1\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_PRODUCED_HIGH_TOTAL = "1-0:2.8.2\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_CURRENT_USAGE = "1-0:1.7.0\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_CURRENT_PRODUCTION = "1-0:2.7.0\\((.*)\\*(.*)\\)";
-	protected static final String REGEX_ELECTRICITY_TARIFF = "0-0:96.14.0\\((\\d*)\\)";
-	protected static final String REGEX_ELECTRICITY_MAXIMUM_CURRENT = "0-0:17.0.0\\((.*)\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_USED_LOW_TOTAL = "1-0:1.8.1\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_USED_HIGH_TOTAL = "1-0:1.8.2\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_PRODUCED_LOW_TOTAL = "1-0:2.8.1\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_PRODUCED_HIGH_TOTAL = "1-0:2.8.2\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_CURRENT_USAGE = "1-0:1.7.0\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_CURRENT_PRODUCTION = "1-0:2.7.0\\((\\d{5}.?\\d{3})\\*(.*)\\)";
+	protected static final String REGEX_ELECTRICITY_TARIFF = "0-0:96.14.0\\((\\d)\\)";
+	protected static final String REGEX_ELECTRICITY_MAXIMUM_CURRENT = "0-0:17.0.0\\((\\d*)\\*(.+)\\)";
 	protected static final String REGEX_ELECTRICITY_SWITCH_POSITION = "0-0:96.3.10\\((\\d)\\)";
 	protected static final String REGEX_ELECTRICITY_MESSAGE_NUMBER = "0-0:96.13.1\\((\\d*)\\)";
-	protected static final String REGEX_ELECTRICITY_MESSAGE_TEXT = "0-0:96.13.0\\((\\.*)\\)";
+	protected static final String REGEX_ELECTRICITY_MESSAGE_TEXT = "0-0:96.13.0\\((.*)\\)";
 
 	protected static final String REGEX_GAS_METER_ID = "0-1:96.1.0\\((.*)\\)";
-	protected static final String REGEX_GAS_TIMESTAMP = "0-1:24.3.0\\((\\d*)\\)\\(.*\\)";
-	protected static final String REGEX_GAS_TOTAL_USED = "^\\((\\d*\\.?\\d*)\\)";
+	protected static final String REGEX_GAS_TIMESTAMP = "0-1:24.3.0\\((\\d{12})\\)\\(.*\\)";
+	protected static final String REGEX_GAS_TOTAL_USED = "^\\((\\d{5}.?\\d{3})\\)";
 	protected static final String REGEX_GAS_VALVE = "0-1:24.4.0\\((\\d)\\)";
 
 	private static Map<Pattern, DatagramValueMapper> patterns = new HashMap<>();
